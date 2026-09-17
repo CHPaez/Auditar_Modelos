@@ -1,0 +1,38 @@
+"""Shared helpers for running an image-classification model against a labeled dataset."""
+from datasets import load_dataset
+import evaluate
+from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
+
+_accuracy_metric = evaluate.load("accuracy")
+
+
+def load_test_set(dataset_id, split, limit):
+    dataset = load_dataset(dataset_id, split=split)
+    if limit:
+        dataset = dataset.select(range(min(limit, len(dataset))))
+    label_names = dataset.features["label"].names
+    return dataset, label_names
+
+
+def predict_all(classifier, images, label_names):
+    predictions = []
+    for image in images:
+        result = classifier(image)
+        predicted_label = result[0]["label"]
+        predictions.append(label_names.index(predicted_label) if predicted_label in label_names else -1)
+    return predictions
+
+
+def compute_metrics(predictions, references):
+    accuracy = _accuracy_metric.compute(predictions=predictions, references=references)["accuracy"]
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        references, predictions, average="weighted", zero_division=0
+    )
+    matrix = confusion_matrix(references, predictions).tolist()
+    return {
+        "accuracy": accuracy,
+        "precision_weighted": precision,
+        "recall_weighted": recall,
+        "f1_weighted": f1,
+        "confusion_matrix": matrix,
+    }
