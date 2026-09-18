@@ -38,11 +38,11 @@ def _confusion_matrix_table(matrix, label_names):
     return f'<table class="confusion"><tr><th></th>{header}</tr>{"".join(rows)}</table>'
 
 
-def _pending_section(title, note, command):
+def _pending_section(title, command):
     return f"""
     <section class="pending">
       <h2>{title}</h2>
-      <p class="meta">{note}</p>
+      <p class="meta">Todavía no se corrió. Generalo con:</p>
       <pre>{command}</pre>
     </section>
     """
@@ -50,21 +50,23 @@ def _pending_section(title, note, command):
 
 def _effectiveness_section(report):
     if report is None:
-        return _pending_section("1. Effectiveness", "Not run yet. Generate it with:", "python scripts/run_audit.py")
+        return _pending_section("1. Efectividad", "python scripts/run_audit.py")
 
     tiles = "".join([
         _metric_tile("Accuracy", report["accuracy"]),
-        _metric_tile("Precision", report["precision_weighted"]),
+        _metric_tile("Precisión", report["precision_weighted"]),
         _metric_tile("Recall", report["recall_weighted"]),
         _metric_tile("F1", report["f1_weighted"]),
     ])
     matrix = _confusion_matrix_table(report["confusion_matrix"], report.get("confusion_matrix_labels"))
     return f"""
     <section>
-      <h2>1. Effectiveness</h2>
-      <p class="meta">{report['model']} on {report['dataset']} &middot; {report['images_evaluated']} images</p>
+      <h2>1. Efectividad</h2>
+      <p class="explain">Qué tan seguido acierta el modelo. <strong>Accuracy</strong> es el porcentaje total de aciertos. <strong>Precisión</strong> mide, de lo que el modelo marcó como una clase, cuánto era realmente esa clase. <strong>Recall</strong> mide, de todos los casos reales de una clase, cuántos detectó. <strong>F1</strong> combina ambas en un solo número.</p>
+      <p class="meta">{report['model']} sobre {report['dataset']} &middot; {report['images_evaluated']} imágenes</p>
       <div class="tiles">{tiles}</div>
-      <h3>Confusion matrix</h3>
+      <h3>Matriz de confusión</h3>
+      <p class="explain">Muestra exactamente qué clase confunde con cuál — cada fila es la clase real, cada columna la que predijo el modelo. Los números fuera de la diagonal son los errores.</p>
       {matrix}
     </section>
     """
@@ -72,22 +74,23 @@ def _effectiveness_section(report):
 
 def _robustness_section(report):
     if report is None:
-        return _pending_section("2. Robustness", "Not run yet. Generate it with:", "python scripts/robustness_test.py")
+        return _pending_section("2. Robustez", "python scripts/robustness_test.py")
 
     baseline = report["baseline"]["accuracy"]
     perturbed = report["perturbed"]["accuracy"]
     drop = report["accuracy_drop"]
     bar = f"""
-    <div class="bar-row"><span>Baseline</span><div class="bar"><div class="bar-fill" style="width:{baseline * 100:.0f}%"></div></div><span>{baseline:.1%}</span></div>
-    <div class="bar-row"><span>Perturbed</span><div class="bar"><div class="bar-fill warn" style="width:{perturbed * 100:.0f}%"></div></div><span>{perturbed:.1%}</span></div>
+    <div class="bar-row"><span>Original</span><div class="bar"><div class="bar-fill" style="width:{baseline * 100:.0f}%"></div></div><span>{baseline:.1%}</span></div>
+    <div class="bar-row"><span>Con ruido</span><div class="bar"><div class="bar-fill warn" style="width:{perturbed * 100:.0f}%"></div></div><span>{perturbed:.1%}</span></div>
     """
-    verdict = "Holds up well" if drop < 0.05 else ("Noticeable drop" if drop < 0.15 else "Fragile under noise")
+    verdict = "se mantiene bien" if drop < 0.05 else ("baja de forma notable" if drop < 0.15 else "es frágil ante el ruido")
     return f"""
     <section>
-      <h2>2. Robustness</h2>
-      <p class="meta">{report['model']} on {report['dataset']} &middot; blur + rotation + brightness/contrast noise</p>
+      <h2>2. Robustez</h2>
+      <p class="explain">Compara cómo responde el modelo con las fotos originales contra las mismas fotos con ruido (borrosas, giradas, con mal brillo) — simula condiciones reales imperfectas, no solo fotos "de manual".</p>
+      <p class="meta">{report['model']} sobre {report['dataset']} &middot; ruido de desenfoque + rotación + brillo/contraste</p>
       {bar}
-      <p class="verdict">Accuracy drop: <strong>{drop:.1%}</strong> &mdash; {verdict}</p>
+      <p class="verdict">Caída de accuracy: <strong>{drop:.1%}</strong> &mdash; el modelo {verdict}.</p>
     </section>
     """
 
@@ -95,9 +98,8 @@ def _robustness_section(report):
 def _code_quality_section(report):
     if report is None:
         return _pending_section(
-            "3. Implementation / code",
-            "Not run yet. Generate it with:",
-            "python scripts/code_quality_check.py --path /path/to/model/codebase",
+            "3. Implementación / código",
+            "python scripts/code_quality_check.py --path /ruta/al/codigo/del/modelo",
         )
 
     lint = report["lint"]
@@ -107,22 +109,23 @@ def _code_quality_section(report):
     dep_ok = dep_skipped or dep.get("exit_code") == 0
     return f"""
     <section>
-      <h2>3. Implementation / code</h2>
+      <h2>3. Implementación / código</h2>
+      <p class="explain">Esto no mide cómo responde el modelo, sino si el código que lo entrena o lo sirve está bien escrito y sin dependencias con fallas de seguridad conocidas.</p>
       <p class="meta">{report['path']}</p>
       <div class="tiles">
-        <div class="tile"><div class="tile-value {'ok' if lint_ok else 'bad'}">{'Clean' if lint_ok else 'Issues found'}</div><div class="tile-label">Lint (ruff)</div></div>
-        <div class="tile"><div class="tile-value {'ok' if dep_ok else 'bad'}">{'Skipped' if dep_skipped else ('Clean' if dep_ok else 'Vulnerabilities found')}</div><div class="tile-label">Dependencies (pip-audit)</div></div>
+        <div class="tile"><div class="tile-value {'ok' if lint_ok else 'bad'}">{'Limpio' if lint_ok else 'Con problemas'}</div><div class="tile-label">Lint (ruff)</div></div>
+        <div class="tile"><div class="tile-value {'ok' if dep_ok else 'bad'}">{'Omitido' if dep_skipped else ('Limpio' if dep_ok else 'Vulnerabilidades encontradas')}</div><div class="tile-label">Dependencias (pip-audit)</div></div>
       </div>
-      <details><summary>Raw lint output</summary><pre>{lint['output'] or '(no output)'}</pre></details>
+      <details><summary>Ver salida completa del lint</summary><pre>{lint['output'] or '(sin salida)'}</pre></details>
     </section>
     """
 
 
 PAGE_TEMPLATE = """<!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Model Audit Report</title>
+<title>Reporte de Auditoría del Modelo</title>
 <style>
   :root {{
     --bg: #f6f7f5; --surface: #ffffff; --text: #1a2420; --muted: #5c6864;
@@ -152,14 +155,15 @@ PAGE_TEMPLATE = """<!doctype html>
   .bar-fill {{ height: 100%; background: var(--accent); }}
   .bar-fill.warn {{ background: #c98a1f; }}
   .verdict {{ margin-top: 10px; }}
+  .explain {{ font-size: 13px; color: var(--muted); margin: 6px 0 14px; }}
   pre {{ background: var(--accent-soft); border-radius: 6px; padding: 10px 12px; overflow-x: auto; font-size: 12px; }}
   details summary {{ cursor: pointer; color: var(--muted); font-size: 13px; }}
 </style>
 </head>
 <body>
   <div class="page">
-    <h1>Model Audit Report</h1>
-    <p class="subtitle">Generated by image-model-audit-kit &mdash; open this file in any browser, no internet needed.</p>
+    <h1>Reporte de Auditoría del Modelo</h1>
+    <p class="subtitle">Generado por image-model-audit-kit &mdash; abrí este archivo en cualquier navegador, no hace falta internet.</p>
     {sections}
   </div>
 </body>
@@ -183,7 +187,7 @@ def main():
 
     html = PAGE_TEMPLATE.format(sections=sections)
     Path(args.out).write_text(html, encoding="utf-8")
-    print(f"Report written to {args.out} -- open it in any browser.")
+    print(f"Reporte generado en {args.out} -- abrilo en cualquier navegador.")
 
 
 if __name__ == "__main__":

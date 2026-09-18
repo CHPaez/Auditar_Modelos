@@ -24,7 +24,7 @@ def test_effectiveness_section_renders_metrics():
 def test_effectiveness_section_pending_when_missing():
     html = _effectiveness_section(None)
 
-    assert "Not run yet" in html
+    assert "Todavía no se corrió" in html
     assert "run_audit.py" in html
 
 
@@ -40,7 +40,7 @@ def test_robustness_section_flags_a_drop():
     html = _robustness_section(report)
 
     assert "30.0%" in html
-    assert "Fragile" in html
+    assert "frágil" in html
 
 
 def test_code_quality_section_reports_clean_lint():
@@ -52,5 +52,5 @@ def test_code_quality_section_reports_clean_lint():
 
     html = _code_quality_section(report)
 
-    assert "Clean" in html
-    assert "Skipped" in html
+    assert "Limpio" in html
+    assert "Omitido" in html

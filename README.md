@@ -89,7 +89,7 @@ Then turn those JSON reports into one simple visual page — no setup, no server
 python scripts/generate_report.py
 ```
 
-Open the resulting `report.html` in any browser — double-click it, or from the terminal: `start report.html` (Windows) / `open report.html` (macOS) / `xdg-open report.html` (Linux). Each audited dimension gets its own section (metrics as big numbers, a color-shaded confusion matrix, a before/after bar for robustness); a dimension you haven't run yet shows as "not run yet" with the exact command to fill it in, instead of just being missing. Re-run it any time after generating new reports to refresh the page.
+The page itself renders in Spanish, with a short explanation under each section describing what that result means. Open the resulting `report.html` in any browser — double-click it, or from the terminal: `start report.html` (Windows) / `open report.html` (macOS) / `xdg-open report.html` (Linux). Each audited dimension gets its own section (metrics as big numbers, a color-shaded confusion matrix, a before/after bar for robustness); a dimension you haven't run yet shows as "not run yet" with the exact command to fill it in, instead of just being missing. Re-run it any time after generating new reports to refresh the page.
 
 ### Browsing results image-by-image (optional, heavier)
 
