@@ -6,4 +6,5 @@ audit_report.json
 robustness_report.json
 code_quality_report.json
 report.html
+_fiftyone_cache/
 .DS_Store

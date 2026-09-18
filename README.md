@@ -37,6 +37,8 @@ Dev/audit tools (in `requirements-dev.txt`):
 
 `generate_report.py` uses only the Python standard library — no extra dependency to view results.
 
+Optional, heavier (in `requirements-visual.txt`): `fiftyone`, for browsing predictions image-by-image instead of just the confusion matrix — see "Browsing results image-by-image" below.
+
 ## Requirements
 
 - Python 3.10+
@@ -83,6 +85,17 @@ python scripts/generate_report.py
 ```
 
 Open the resulting `report.html` in any browser — double-click it, or from the terminal: `start report.html` (Windows) / `open report.html` (macOS) / `xdg-open report.html` (Linux). Each audited dimension gets its own section (metrics as big numbers, a color-shaded confusion matrix, a before/after bar for robustness); a dimension you haven't run yet shows as "not run yet" with the exact command to fill it in, instead of just being missing. Re-run it any time after generating new reports to refresh the page.
+
+### Browsing results image-by-image (optional, heavier)
+
+`report.html` gives you the confusion matrix; if you want to click through the actual misclassified images instead, this launches [FiftyOne](https://voxel51.com/fiftyone/)'s own local app in your browser:
+
+```bash
+pip install -r requirements-visual.txt
+python scripts/browse_results.py
+```
+
+This is a heavier, separate install on purpose — it pulls in FiftyOne's full app stack instead of writing a static file, so it's kept out of the default `requirements.txt`.
 
 To just sanity-check that a general-purpose model downloads and classifies a photo (no metrics, no dataset needed):
 

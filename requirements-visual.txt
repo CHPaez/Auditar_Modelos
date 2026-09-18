@@ -1,0 +1,2 @@
+-r requirements.txt
+fiftyone>=0.24
