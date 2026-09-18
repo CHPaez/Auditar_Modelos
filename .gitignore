@@ -4,4 +4,6 @@ __pycache__/
 venv/
 audit_report.json
 robustness_report.json
+code_quality_report.json
+report.html
 .DS_Store

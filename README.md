@@ -10,8 +10,9 @@ Auditing a model is independent of training it. This kit treats any image-classi
 
 1. **Effectiveness** — accuracy, precision, recall, F1, confusion matrix (`scripts/run_audit.py`)
 2. **Robustness** — accuracy drop under blur/rotation/brightness noise (`scripts/robustness_test.py`)
+3. **Implementation/code** — lint + dependency vulnerability scan of the codebase behind the model (`scripts/code_quality_check.py`)
 
-Equity/subgroup analysis, drift monitoring, and implementation/code review are separate, larger dimensions of a full model audit and are out of scope for this kit.
+Equity/subgroup analysis and drift monitoring over time are separate, larger dimensions of a full model audit and are out of scope for this kit.
 
 ## Requirements
 
@@ -22,10 +23,24 @@ Equity/subgroup analysis, drift monitoring, and implementation/code review are s
 ## Install
 
 ```bash
+git clone https://github.com/CHPaez/Auditar_Modelos.git
+cd Auditar_Modelos
+
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+### Running on a small or shared server
+
+If you're installing this on a small box (2 vCPU / 4 GB RAM class) that's also running other live services (nginx, PHP-FPM, MySQL, etc.), two things help it stay light:
+
+- Install the CPU-only PyTorch build instead of the default one (skips ~2GB of unused CUDA libraries):
+  ```bash
+  pip install torch --index-url https://download.pytorch.org/whl/cpu
+  pip install -r requirements.txt
+  ```
+- Keep `--limit` low (10–20 images) for a first run, and run one script at a time rather than both scripts in parallel, so the audit doesn't compete for RAM/CPU with whatever else the box is already serving.
 
 ## Quickstart (bundled example)
 
@@ -37,6 +52,14 @@ python scripts/robustness_test.py
 ```
 
 This downloads `nateraw/vit-base-beans` (a model fine-tuned to classify bean leaf disease) and the `beans` test dataset automatically on first run, then prints and saves a JSON report. See `examples/beans_vit/README.md` for what to expect.
+
+Then turn those JSON reports into one simple visual page — no setup, no server, just open the file:
+
+```bash
+python scripts/generate_report.py
+```
+
+Open the resulting `report.html` in any browser. Each audited dimension gets its own section (metrics as big numbers, a color-shaded confusion matrix, a before/after bar for robustness); a dimension you haven't run yet shows as "not run yet" with the exact command to fill it in, instead of just being missing. Re-run it any time after generating new reports to refresh the page.
 
 To just sanity-check that a general-purpose model downloads and classifies a photo (no metrics, no dataset needed):
 
@@ -66,9 +89,31 @@ dataset = load_dataset("imagefolder", data_dir="data")
 
 See the [`imagefolder` docs](https://huggingface.co/docs/datasets/en/image_load#imagefolder) for details.
 
+## Checking the code behind the model
+
+Separate from accuracy/robustness, `scripts/code_quality_check.py` audits the codebase behind your model (its training pipeline or serving code) — lint issues via `ruff`, plus a dependency vulnerability scan via `pip-audit` if the target has a `requirements.txt`:
+
+```bash
+pip install -r requirements-dev.txt
+python scripts/code_quality_check.py --path /path/to/model/codebase
+```
+
+This does **not** apply to a public pretrained checkpoint downloaded from Hugging Face — there's no local source code to lint there, just weights and the `transformers` library's own (already maintained) implementation. Point it at your own model's repository instead.
+
+## Tests
+
+Fast, offline unit tests cover the metrics math (`audit_lib.compute_metrics`), the robustness perturbation (`robustness_test.perturb`), and the subprocess wrapper used by `code_quality_check.py` — no model download or network access required:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+`run_audit.py` and `robustness_test.py` themselves are exercised end-to-end by actually running them (see Quickstart above) rather than by a mocked test, since their entire point is to really download a model and dataset and report on them.
+
 ## Cost
 
-Every tool this kit depends on (`transformers`, `datasets`, `evaluate`, `albumentations`, `scikit-learn`) is free and open source, with no licensing restrictions for internal or commercial use. If you later extend this kit to object-detection models via Ultralytics/YOLO, note that Ultralytics requires either open-sourcing your project under AGPL-3.0 or a paid Enterprise license for any non-open-source use — that caveat does not apply to anything shipped in this kit.
+Every tool this kit depends on (`transformers`, `datasets`, `albumentations`, `scikit-learn`) is free and open source, with no licensing restrictions for internal or commercial use. If you later extend this kit to object-detection models via Ultralytics/YOLO, note that Ultralytics requires either open-sourcing your project under AGPL-3.0 or a paid Enterprise license for any non-open-source use — that caveat does not apply to anything shipped in this kit.
 
 ## License
 

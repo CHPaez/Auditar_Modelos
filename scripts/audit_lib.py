@@ -1,12 +1,10 @@
 """Shared helpers for running an image-classification model against a labeled dataset."""
-from datasets import load_dataset
-import evaluate
-from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
-
-_accuracy_metric = evaluate.load("accuracy")
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support
 
 
 def load_test_set(dataset_id, split, limit):
+    from datasets import load_dataset  # imported lazily: only needed here, not for compute_metrics
+
     dataset = load_dataset(dataset_id, split=split)
     if limit:
         dataset = dataset.select(range(min(limit, len(dataset))))
@@ -24,7 +22,7 @@ def predict_all(classifier, images, label_names):
 
 
 def compute_metrics(predictions, references):
-    accuracy = _accuracy_metric.compute(predictions=predictions, references=references)["accuracy"]
+    accuracy = accuracy_score(references, predictions)
     precision, recall, f1, _ = precision_recall_fscore_support(
         references, predictions, average="weighted", zero_division=0
     )

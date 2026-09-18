@@ -1,7 +1,6 @@
 transformers>=4.40
 torch>=2.2
 datasets>=2.19
-evaluate>=0.4
 scikit-learn>=1.4
 albumentations>=1.4
 Pillow>=10.0
