@@ -2,6 +2,8 @@
 
 A small, free, open-source toolkit to audit an already-trained image-classification model: baseline accuracy/precision/recall/F1, a confusion matrix, and a robustness test against blur/rotation/brightness noise — without touching the model's training pipeline.
 
+> Guía en español, paso a paso y sin tecnicismos: [`GUIA_RAPIDA.md`](GUIA_RAPIDA.md).
+
 ## Why
 
 Auditing a model is independent of training it. This kit treats any image-classification model as a black box: give it a model id and a labeled test set, and it reports how well the model actually performs — including how much it degrades under imperfect real-world photos.
@@ -11,8 +13,9 @@ Auditing a model is independent of training it. This kit treats any image-classi
 1. **Effectiveness** — accuracy, precision, recall, F1, confusion matrix (`scripts/run_audit.py`)
 2. **Robustness** — accuracy drop under blur/rotation/brightness noise (`scripts/robustness_test.py`)
 3. **Implementation/code** — lint + dependency vulnerability scan of the codebase behind the model (`scripts/code_quality_check.py`)
+4. **Drift** — compares predictions on the original images against the same images after noise, as a stand-in for "today's photos look different from deployment" (`scripts/drift_check.py`)
 
-Equity/subgroup analysis and drift monitoring over time are separate, larger dimensions of a full model audit and are out of scope for this kit.
+Equity/subgroup analysis is a separate, larger dimension of a full model audit and is out of scope for this kit.
 
 ## What it uses
 
@@ -38,6 +41,8 @@ Dev/audit tools (in `requirements-dev.txt`):
 `generate_report.py` uses only the Python standard library — no extra dependency to view results.
 
 Optional, heavier (in `requirements-visual.txt`): `fiftyone`, for browsing predictions image-by-image instead of just the confusion matrix — see "Browsing results image-by-image" below.
+
+Optional (in `requirements-drift.txt`): `evidently`, `pandas` — for the drift check, see "Checking for drift" below.
 
 ## Requirements
 
@@ -97,6 +102,17 @@ python scripts/browse_results.py
 
 This is a heavier, separate install on purpose — it pulls in FiftyOne's full app stack instead of writing a static file, so it's kept out of the default `requirements.txt`.
 
+### Checking for drift (optional)
+
+Compares the model's predictions on the original images against the same images after blur/rotation/brightness noise, as a stand-in for "the photos reaching the model today look different from when it was deployed" — real drift monitoring would compare against actual recent production photos instead:
+
+```bash
+pip install -r requirements-drift.txt
+python scripts/drift_check.py
+```
+
+Opens as `drift_report.html`, an Evidently data-drift report.
+
 To just sanity-check that a general-purpose model downloads and classifies a photo (no metrics, no dataset needed):
 
 ```bash
@@ -138,7 +154,7 @@ This does **not** apply to a public pretrained checkpoint downloaded from Huggin
 
 ## Tests
 
-Fast, offline unit tests cover the metrics math (`audit_lib.compute_metrics`), the robustness perturbation (`robustness_test.perturb`), and the subprocess wrapper used by `code_quality_check.py` — no model download or network access required:
+Fast, offline unit tests cover the metrics math (`audit_lib.compute_metrics`), the robustness perturbation (`robustness_test.perturb`), the subprocess wrapper used by `code_quality_check.py`, and the prediction table used by `drift_check.py` — no model download or network access required:
 
 ```bash
 pip install -r requirements-dev.txt
