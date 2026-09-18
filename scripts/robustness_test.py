@@ -2,7 +2,7 @@
 brightness/contrast noise to each image, and report the accuracy drop.
 
 Usage:
-    python scripts/robustness_test.py --model nateraw/vit-base-beans --dataset beans --split test
+    python scripts/robustness_test.py --model nateraw/vit-base-beans --dataset AI-Lab-Makerere/beans --split test
 """
 import argparse
 import json
@@ -30,9 +30,10 @@ def perturb(image):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default="nateraw/vit-base-beans")
-    parser.add_argument("--dataset", default="beans")
+    parser.add_argument("--dataset", default="AI-Lab-Makerere/beans")
     parser.add_argument("--split", default="test")
     parser.add_argument("--limit", type=int, default=40)
+    parser.add_argument("--label-column", default=None, help="Dataset column with the class labels (auto-detected if omitted)")
     parser.add_argument("--out", default="robustness_report.json")
     args = parser.parse_args()
 
@@ -40,8 +41,8 @@ def main():
     classifier = pipeline(task="image-classification", model=args.model)
 
     print(f"Loading dataset '{args.dataset}' (split={args.split})...")
-    dataset, label_names = load_test_set(args.dataset, args.split, args.limit)
-    references = dataset["label"]
+    dataset, label_names, label_column = load_test_set(args.dataset, args.split, args.limit, args.label_column)
+    references = dataset[label_column]
 
     print("Running baseline predictions...")
     baseline_predictions = predict_all(classifier, dataset["image"], label_names)

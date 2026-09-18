@@ -11,7 +11,7 @@ def test_effectiveness_section_renders_metrics():
         "recall_weighted": 0.9,
         "f1_weighted": 0.9,
         "confusion_matrix": [[10, 1], [0, 9]],
-        "label_names": ["healthy", "bean_rust"],
+        "confusion_matrix_labels": ["healthy", "bean_rust"],
     }
 
     html = _effectiveness_section(report)

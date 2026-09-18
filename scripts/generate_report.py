@@ -58,7 +58,7 @@ def _effectiveness_section(report):
         _metric_tile("Recall", report["recall_weighted"]),
         _metric_tile("F1", report["f1_weighted"]),
     ])
-    matrix = _confusion_matrix_table(report["confusion_matrix"], report.get("label_names"))
+    matrix = _confusion_matrix_table(report["confusion_matrix"], report.get("confusion_matrix_labels"))
     return f"""
     <section>
       <h2>1. Effectiveness</h2>

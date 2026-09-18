@@ -81,7 +81,7 @@ python scripts/run_audit.py
 python scripts/robustness_test.py
 ```
 
-This downloads `nateraw/vit-base-beans` (a model fine-tuned to classify bean leaf disease) and the `beans` test dataset automatically on first run, then prints and saves a JSON report. See `examples/beans_vit/README.md` for what to expect.
+This downloads `nateraw/vit-base-beans` (a model fine-tuned to classify bean leaf disease) and the `AI-Lab-Makerere/beans` test dataset automatically on first run, then prints and saves a JSON report. See `examples/beans_vit/README.md` for what to expect.
 
 Then turn those JSON reports into one simple visual page — no setup, no server, just open the file:
 
@@ -127,8 +127,9 @@ python scripts/robustness_test.py --model <your-model-id> --dataset <your-datase
 ```
 
 - `--model`: any Hugging Face model id that supports the `image-classification` pipeline.
-- `--dataset`: any Hugging Face dataset id with an `image` field and a `label` `ClassLabel` field.
+- `--dataset`: any Hugging Face dataset id with an `image` field and a `ClassLabel` field for the class.
 - `--limit`: cap how many images to evaluate (default 40, for a quick run).
+- `--label-column`: name of that class column, if it isn't `label` or `labels` (auto-detected otherwise — some datasets use other names).
 
 **Important — matching predictions to ground truth**: this kit compares the model's predicted label text to the dataset's class names. This works out of the box when the model was fine-tuned on that exact dataset's classes — which is the normal case for a company's own production model, since it was trained on its own labeled categories. It will **not** give meaningful metrics if you pair a general-purpose model (e.g. an ImageNet classifier like `microsoft/resnet-50`) with a dataset whose classes it never learned. `scripts/download_model.py` is for that kind of quick single-photo sanity check instead — it doesn't need matching classes.
 

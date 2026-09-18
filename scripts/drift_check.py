@@ -9,7 +9,7 @@ a synthetic perturbation -- this script demos the mechanics with what the
 rest of this kit already has on hand.
 
 Usage:
-    python scripts/drift_check.py --model nateraw/vit-base-beans --dataset beans --split test
+    python scripts/drift_check.py --model nateraw/vit-base-beans --dataset AI-Lab-Makerere/beans --split test
 """
 import argparse
 
@@ -37,7 +37,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default="nateraw/vit-base-beans")
-    parser.add_argument("--dataset", default="beans")
+    parser.add_argument("--dataset", default="AI-Lab-Makerere/beans")
     parser.add_argument("--split", default="test")
     parser.add_argument("--limit", type=int, default=40)
     parser.add_argument("--out", default="drift_report.html")
@@ -47,7 +47,7 @@ def main():
     classifier = pipeline(task="image-classification", model=args.model)
 
     print(f"Loading dataset '{args.dataset}' (split={args.split})...")
-    dataset, _ = load_test_set(args.dataset, args.split, args.limit)
+    dataset, _, _ = load_test_set(args.dataset, args.split, args.limit)
 
     print("Scoring the reference (original) images...")
     reference_data = _predict_with_confidence(classifier, dataset["image"])

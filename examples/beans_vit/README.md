@@ -1,7 +1,7 @@
 # Example: bean leaf disease classifier
 
 - **Model**: [`nateraw/vit-base-beans`](https://huggingface.co/nateraw/vit-base-beans) — a ViT fine-tuned on the `beans` dataset.
-- **Dataset**: [`beans`](https://huggingface.co/datasets/beans) (test split) — 3 classes: `angular_leaf_spot`, `bean_rust`, `healthy`.
+- **Dataset**: [`AI-Lab-Makerere/beans`](https://huggingface.co/datasets/AI-Lab-Makerere/beans) (test split) — 3 classes: `angular_leaf_spot`, `bean_rust`, `healthy`.
 
 This pair is chosen deliberately: the model was fine-tuned on exactly this dataset's classes, so the reported metrics are meaningful out of the box (unlike pairing a general ImageNet classifier with this dataset, which would produce nonsense accuracy).
 
