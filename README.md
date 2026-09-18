@@ -14,6 +14,29 @@ Auditing a model is independent of training it. This kit treats any image-classi
 
 Equity/subgroup analysis and drift monitoring over time are separate, larger dimensions of a full model audit and are out of scope for this kit.
 
+## What it uses
+
+Runtime (in `requirements.txt`):
+
+| Package | What it's for |
+|---|---|
+| `transformers` | Downloads and runs the Hugging Face model (`image-classification` pipeline) |
+| `torch` | The ML framework `transformers` runs on |
+| `datasets` | Downloads the labeled test dataset from Hugging Face |
+| `scikit-learn` | Computes accuracy, precision, recall, F1 and the confusion matrix |
+| `albumentations` | Generates the blur/rotation/brightness noise for the robustness test |
+| `Pillow`, `numpy` | Image handling and array operations |
+
+Dev/audit tools (in `requirements-dev.txt`):
+
+| Package | What it's for |
+|---|---|
+| `pytest` | Runs the unit tests |
+| `ruff` | Lints the codebase behind a model (implementation/code check) |
+| `pip-audit` | Scans that codebase's dependencies for known vulnerabilities |
+
+`generate_report.py` uses only the Python standard library — no extra dependency to view results.
+
 ## Requirements
 
 - Python 3.10+
@@ -59,7 +82,7 @@ Then turn those JSON reports into one simple visual page — no setup, no server
 python scripts/generate_report.py
 ```
 
-Open the resulting `report.html` in any browser. Each audited dimension gets its own section (metrics as big numbers, a color-shaded confusion matrix, a before/after bar for robustness); a dimension you haven't run yet shows as "not run yet" with the exact command to fill it in, instead of just being missing. Re-run it any time after generating new reports to refresh the page.
+Open the resulting `report.html` in any browser — double-click it, or from the terminal: `start report.html` (Windows) / `open report.html` (macOS) / `xdg-open report.html` (Linux). Each audited dimension gets its own section (metrics as big numbers, a color-shaded confusion matrix, a before/after bar for robustness); a dimension you haven't run yet shows as "not run yet" with the exact command to fill it in, instead of just being missing. Re-run it any time after generating new reports to refresh the page.
 
 To just sanity-check that a general-purpose model downloads and classifies a photo (no metrics, no dataset needed):
 
